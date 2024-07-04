@@ -2,6 +2,7 @@ const path = require('path')
 const webpack = require('webpack')
 const HtmlWebPackPlugin = require("html-webpack-plugin")
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const { GenerateSW } = require('workbox-webpack-plugin')
 
 module.exports = {
     entry: './src/client/index.js',
@@ -34,6 +35,33 @@ module.exports = {
             // Automatically remove all unused webpack assets on rebuild
             cleanStaleWebpackAssets: true,
             protectWebpackAssets: false
+        }),
+        new GenerateSW({
+            clientsClaim: true,
+            skipWaiting: true,
+            runtimeCaching: [
+                {
+                    urlPattern: ({request}) => request.destination === 'document',
+                    handler: 'NetworkFirst',
+                    options: {
+                        cacheName: 'html-cache',
+                    },
+                },
+                {
+                    urlPattern: ({request}) => request.destination === 'style',
+                    handler: 'StaleWhileRevalidate',
+                    options: {
+                        cacheName: 'css-cache',
+                    },
+                },
+                {
+                    urlPattern: ({request}) => request.destination === 'script',
+                    handler: 'StaleWhileRevalidate',
+                    options: {
+                        cacheName: 'js-cache',
+                    },
+                },
+            ],
         })
     ],
     devServer: {
