@@ -1,30 +1,55 @@
-// Replace checkForName with a function that checks the URL
-import { checkForName } from './nameChecker'
+import { checkForName } from './nameChecker';
 
-// If working on Udacity workspace, update this with the Server API URL e.g. `https://wfkdhyvtzx.prod.udacity-student-workspaces.com/api`
-// const serverURL = 'https://wfkdhyvtzx.prod.udacity-student-workspaces.com/api'
-const serverURL = 'https://localhost:8000/api'
+const serverURL = 'http://localhost:3000/analyze';
 
-const form = document.getElementById('urlForm');
-form.addEventListener('submit', handleSubmit);
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('urlForm');
+    form.addEventListener('submit', handleSubmit);
+});
 
-function handleSubmit(event) {
+async function handleSubmit(event) {
     event.preventDefault();
 
-    // Get the URL from the input field
     const formText = document.getElementById('name').value;
 
-    // This is an example code that checks the submitted name. You may remove it from your code
-    checkForName(formText);
-    
-    // Check if the URL is valid
- 
-        // If the URL is valid, send it to the server using the serverURL constant above
-      
+    if (!checkForName(formText)) {
+        alert('Please enter a valid URL.');
+        return;
+    }
+
+    try {
+        const response = await fetch(serverURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: formText }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        displayResults(data);
+    } catch (error) {
+        document.getElementById('results').innerHTML = `<p>An error occurred: ${error.message}</p>`;
+    }
 }
 
-// Function to send data to the server
+function displayResults(data) {
+    const resultsDiv = document.getElementById('results');
+    
+    if (data.error) {
+        resultsDiv.innerHTML = `<p>Error: ${data.details}</p>`;
+        return;
+    }
 
-// Export the handleSubmit function
+    resultsDiv.innerHTML = `
+        <p>Polarity: ${data.polarity}</p>
+        <p>Subjectivity: ${data.subjectivity}</p>
+        <p>Text: ${data.text}</p>
+    `;
+}
+
 export { handleSubmit };
-
